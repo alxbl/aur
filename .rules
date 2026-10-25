@@ -19,4 +19,5 @@ Source-only PKGBUILD repository for binary tools without official or AUR package
 - Pin `sha256sums`; never `SKIP`. The template's all-zero checksum is a deliberate placeholder.
 - Updaters only rewrite the first element of a checksum array, the upstream download. An update that needs more (new dependencies, changed sources) must be flagged as out of date, not guessed.
 - ACT must run on the game's exact wine build and sync mode (fsync/esync), or a second wineserver starts and ACT cannot see the game. The `advanced-combat-tracker` launcher follows the running wineserver for this; keep it that way.
+- Never symlink files into a wine prefix. Wine exposes symlinks to Windows programs as reparse points, which breaks ACT's own checks (it reports its `.exe.config` as corrupt). Copy instead.
 - Bash uses dynamic scoping: a variable in a test or updater with the same name as a `local` in `run_update` (`current`, `latest`, `sums`, `work`, `array`, `sum`) is shadowed.
