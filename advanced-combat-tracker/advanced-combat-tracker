@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+# Runs Advanced Combat Tracker in the FFXIV wine prefix of XIVLauncher.Core,
+# first linking ACT and the packaged plugins into the prefix.
+# Usage: advanced-combat-tracker [--setup]
+#   --setup  install .NET Framework 4.8 into the prefix
+# Environment:
+#   ACT_PREFIX, ACT_WINE  override prefix and wine detection
+#   ACT_SHARE             directory holding the packaged app/ and plugins/
+#   PROC                  location of the proc filesystem
+
+ACT_SHARE=${ACT_SHARE:-/usr/share/advanced-combat-tracker}
+PROC=${PROC:-/proc}
+NET48_RELEASE=528040
+
+die() {
+  echo "advanced-combat-tracker: $*" >&2
+  exit 1
+}
+
+# Sets PREFIX.
+detect_prefix() {
+  if [[ -n ${ACT_PREFIX:-} ]]; then
+    PREFIX=$ACT_PREFIX
+  elif [[ -d $HOME/.xlcore/wineprefix ]]; then
+    PREFIX=$HOME/.xlcore/wineprefix
+  elif [[ -d $HOME/.var/app/dev.goats.xivlauncher ]]; then
+    die "Flatpak XIVLauncher is not supported; set ACT_PREFIX and ACT_WINE"
+  else
+    die "no wine prefix at ~/.xlcore/wineprefix; set ACT_PREFIX"
+  fi
+  [[ -d $PREFIX ]] || die "wine prefix $PREFIX does not exist"
+}
+
+# Sets RUNNING_SERVER to the wineserver executable serving PREFIX, if any, and
+# RUNNING_SYNC to the sync variable it was started with.
+find_wineserver() {
+  RUNNING_SERVER= RUNNING_SYNC=
+  local dir env
+  for dir in "$PROC"/[0-9]*; do
+    [[ $(cat "$dir/comm" 2>/dev/null) == wineserver ]] || continue
+    env=$(tr '\0' '\n' <"$dir/environ" 2>/dev/null) || continue
+    grep -qxF "WINEPREFIX=$PREFIX" <<<"$env" || continue
+    RUNNING_SERVER=$(readlink "$dir/exe") || continue
+    if grep -qx 'WINEFSYNC=1' <<<"$env"; then
+      RUNNING_SYNC=WINEFSYNC
+    elif grep -qx 'WINEESYNC=1' <<<"$env"; then
+      RUNNING_SYNC=WINEESYNC
+    fi
+    return 0
+  done
+}
+
+# ini_value FILE KEY
+ini_value() {
+  sed -n "s/^$2=//p" "$1" | head -1 | tr -d '\r'
+}
+
+# Sets WINE, WINESERVER and SYNC (the sync variable name, or empty). Follows the
+# running game's wineserver so that ACT joins it instead of starting another.
+detect_wine() {
+  local root ini builds
+  root=$(dirname "$PREFIX")
+  ini=$root/launcher.ini
+  find_wineserver
+  SYNC=$RUNNING_SYNC
+
+  if [[ -n ${ACT_WINE:-} ]]; then
+    WINE=$ACT_WINE
+  elif [[ -n $RUNNING_SERVER ]]; then
+    WINE=$(dirname "$RUNNING_SERVER")/wine
+  else
+    [[ -f $ini ]] || die "no $ini; set ACT_WINE"
+    case $(ini_value "$ini" WineStartupType) in
+      Custom)
+        WINE=$(ini_value "$ini" WineBinaryPath)/wine
+        ;;
+      Managed)
+        builds=("$root"/compatibilitytool/wine/*/bin/wine)
+        [[ -x ${builds[0]} ]] || die "no managed wine build in $root/compatibilitytool/wine; set ACT_WINE"
+        ((${#builds[@]} == 1)) || die "several managed wine builds; start the game first or set ACT_WINE"
+        WINE=${builds[0]}
+        ;;
+      *) die "unknown WineStartupType in $ini; set ACT_WINE" ;;
+    esac
+  fi
+  [[ -x $WINE ]] || die "wine binary $WINE not found"
+  WINESERVER=${RUNNING_SERVER:-$(dirname "$WINE")/wineserver}
+
+  if [[ -z $RUNNING_SERVER && -f $ini ]]; then
+    case $(ini_value "$ini" WineSyncType | tr '[:upper:]' '[:lower:]') in
+      fsync) SYNC=WINEFSYNC ;;
+      esync) SYNC=WINEESYNC ;;
+    esac
+  fi
+}
+
+# Succeeds if the prefix has .NET Framework 4.8 or later.
+check_dotnet() {
+  local hex
+  hex=$(awk '/^\[/ { k = ($0 ~ /NDP\\\\v4\\\\Full\]/) } k && /^"Release"=dword:/ { sub(/.*:/, ""); print; exit }' \
+    "$PREFIX/system.reg" 2>/dev/null) || return 1
+  [[ -n $hex ]] && ((16#$hex >= NET48_RELEASE))
+}
+
+setup() {
+  local answer
+  [[ -z $RUNNING_SERVER ]] || die "a wineserver is running for $PREFIX; close the game and launcher first"
+  command -v winetricks >/dev/null || die "winetricks is not installed"
+  echo "This installs .NET Framework 4.8 into $PREFIX with $WINE." >&2
+  echo "Back the prefix up first, e.g. cp -a '$PREFIX' '$PREFIX.bak'." >&2
+  read -r -p "Continue? [y/N] " answer || answer=
+  [[ $answer == [yY]* ]] || die "aborted"
+  env WINEPREFIX="$PREFIX" WINE="$WINE" WINESERVER="$WINESERVER" ${SYNC:+$SYNC=1} \
+    winetricks -q dotnet48
+}
+
+# link_dir SRC DST: symlinks every file of SRC into DST, which keeps its real
+# directories. Links to the package are refreshed; anything else already at a
+# path is left alone.
+link_dir() {
+  local file dst
+  while IFS= read -r -d '' file; do
+    dst=$2/${file#"$1"/}
+    if [[ -L $dst && $(readlink "$dst") == "$ACT_SHARE"/* ]]; then
+      [[ $(readlink "$dst") == "$file" ]] && continue
+    elif [[ -e $dst || -L $dst ]]; then
+      echo "advanced-combat-tracker: $dst is not a package link; leaving it" >&2
+      continue
+    fi
+    mkdir -p "$(dirname "$dst")"
+    ln -sfn "$file" "$dst"
+  done < <(find "$1" -type f -print0)
+}
+
+# prune_links DIR: removes links into the package whose target is gone, and
+# directories they leave empty.
+prune_links() {
+  local link
+  while IFS= read -r -d '' link; do
+    if [[ $(readlink "$link") == "$ACT_SHARE"/* && ! -e $link ]]; then
+      rm -f "$link"
+      rmdir "$(dirname "$link")" 2>/dev/null || true
+    fi
+  done < <(find "$1" -type l -print0)
+}
+
+# Links the packaged app and plugins into the prefix.
+link_files() {
+  local app=$PREFIX/drive_c/advanced-combat-tracker plugin name
+  mkdir -p "$app"
+  link_dir "$ACT_SHARE/app" "$app"
+
+  for plugin in "$ACT_SHARE"/plugins/*/; do
+    [[ -d $plugin ]] || continue
+    name=$(basename "$plugin")
+    if [[ ! -d $app/Plugins/$name ]]; then
+      echo "New plugin $name: in ACT, open Plugins > Plugin Listing and add C:\\advanced-combat-tracker\\Plugins\\$name" >&2
+    fi
+    link_dir "${plugin%/}" "$app/Plugins/$name"
+  done
+  prune_links "$app"
+}
+
+run_act() {
+  cd "$PREFIX/drive_c/advanced-combat-tracker"
+  exec env WINEPREFIX="$PREFIX" WINEDEBUG=-all WINESERVER="$WINESERVER" ${SYNC:+$SYNC=1} \
+    "$WINE" 'C:\advanced-combat-tracker\Advanced Combat Tracker.exe'
+}
+
+main() {
+  set -euo pipefail
+  local setup=0
+  case ${1:-} in
+    "") ;;
+    --setup) setup=1 ;;
+    *) die "usage: advanced-combat-tracker [--setup]" ;;
+  esac
+
+  detect_prefix
+  detect_wine
+  if ((setup)); then
+    setup
+    return
+  fi
+  check_dotnet || die ".NET Framework 4.8 is missing from $PREFIX; run: advanced-combat-tracker --setup"
+  link_files
+  run_act
+}
+
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+  main "$@"
+fi

@@ -1,0 +1,20 @@
+# Maintainer: alxbl
+
+pkgname=ffxiv-act-parser
+pkgver=3.0.3.4
+pkgrel=1
+pkgdesc='FFXIV parsing plugin for Advanced Combat Tracker'
+arch=('any')
+url='https://github.com/ravahn/FFXIV_ACT_Plugin'
+# Closed source; upstream states no license.
+license=('LicenseRef-custom')
+depends=('advanced-combat-tracker')
+options=('!strip')
+install=ffxiv-act-parser.install
+source=("FFXIV_ACT_Plugin-${pkgver}.zip::https://github.com/ravahn/FFXIV_ACT_Plugin/releases/download/${pkgver}/FFXIV_ACT_Plugin_${pkgver}.zip")
+sha256sums=('089306e497dd4b8fb79290472f006b889fd21fc3d3816ce41ef9a0300feb2d11')
+
+package() {
+  local dir=$pkgdir/usr/share/advanced-combat-tracker/plugins/FFXIV_ACT_Plugin
+  install -Dm644 FFXIV_ACT_Plugin.dll deucalion-*.distrib.dll -t "$dir"
+}

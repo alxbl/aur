@@ -7,6 +7,7 @@ Source-only PKGBUILD repository for binary tools without official or AUR package
 - After any PKGBUILD change, regenerate `.SRCINFO`: `makepkg --printsrcinfo > .SRCINFO`.
 - Bump packages with `update/check-all.sh`; review the diff before committing. `-n` only reports.
 - Run `update/test.sh` after changing `update/lib.sh` or `update/check-all.sh`.
+- A package that ships a script has `<pkgname>/test.sh`; run it after changing the script. Pin the sha256 of local source files in the PKGBUILD; the test checks they are current.
 - Build and test packages in a scratch copy, not in the worktree. To try paru against the repo, use a scratch `paru.conf` via `XDG_CONFIG_HOME` and `XDG_CACHE_HOME`.
 
 ## Traps
@@ -14,5 +15,6 @@ Source-only PKGBUILD repository for binary tools without official or AUR package
 - Never run `paru -Sy` against the real pacman databases for testing; it risks a partial upgrade. Use `paru --dbpath <copy> -Sy --pkgbuilds`.
 - Paru finds packages by scanning for files named `PKGBUILD`. Never give a template or fixture that name.
 - Pin `sha256sums`; never `SKIP`. The template's all-zero checksum is a deliberate placeholder.
-- Updaters only rewrite single-element checksum arrays. An update that needs more (new dependencies, changed sources) must be flagged as out of date, not guessed.
+- Updaters only rewrite the first element of a checksum array, the upstream download. An update that needs more (new dependencies, changed sources) must be flagged as out of date, not guessed.
+- ACT must run on the game's exact wine build and sync mode (fsync/esync), or a second wineserver starts and ACT cannot see the game. The `advanced-combat-tracker` launcher follows the running wineserver for this; keep it that way.
 - Bash uses dynamic scoping: a variable in a test or updater with the same name as a `local` in `run_update` (`current`, `latest`, `sums`, `work`, `array`, `sum`) is shadowed.

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Advanced Combat Tracker
+Comment=FFXIV combat parser, run in the XIVLauncher wine prefix
+Exec=advanced-combat-tracker
+Terminal=false
+Categories=Game;Utility;
