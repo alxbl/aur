@@ -1,0 +1,23 @@
+# Maintainer: alxbl
+# Template for a package that repackages an upstream release binary.
+# Replace every placeholder, then run: makepkg --printsrcinfo > .SRCINFO
+
+pkgname=example-bin
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Short description of the tool'
+arch=('x86_64')
+url='https://example.com'
+license=('MIT')
+provides=("example=${pkgver}")
+conflicts=('example')
+options=('!strip' '!debug')
+source_x86_64=("example-${pkgver}.tar.gz::https://example.com/releases/download/v${pkgver}/example-${pkgver}-linux-amd64.tar.gz")
+# Placeholder: a real checksum is required. Do not replace with SKIP.
+sha256sums_x86_64=('0000000000000000000000000000000000000000000000000000000000000000')
+
+package() {
+  # Adjust these paths to the archive's layout.
+  install -Dm755 "$srcdir/example" "$pkgdir/usr/bin/example"
+  install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
