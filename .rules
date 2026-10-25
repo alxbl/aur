@@ -1,0 +1,18 @@
+# alxbl/aur
+
+Source-only PKGBUILD repository for binary tools without official or AUR packages. Paru consumes it as a custom `[alxbl]` repository (`Url = https://github.com/alxbl/aur`). Nothing is pre-built.
+
+## Procedures
+- New package: start from `templates/PKGBUILD-bin` and add `update/<pkgname>.sh` in the same change. `update/check-all.sh` fails for a package without an updater.
+- After any PKGBUILD change, regenerate `.SRCINFO`: `makepkg --printsrcinfo > .SRCINFO`.
+- Bump packages with `update/check-all.sh`; review the diff before committing. `-n` only reports.
+- Run `update/test.sh` after changing `update/lib.sh` or `update/check-all.sh`.
+- Build and test packages in a scratch copy, not in the worktree. To try paru against the repo, use a scratch `paru.conf` via `XDG_CONFIG_HOME` and `XDG_CACHE_HOME`.
+
+## Traps
+- Never edit the user's real `paru.conf` without consent.
+- Never run `paru -Sy` against the real pacman databases for testing; it risks a partial upgrade. Use `paru --dbpath <copy> -Sy --pkgbuilds`.
+- Paru finds packages by scanning for files named `PKGBUILD`. Never give a template or fixture that name.
+- Pin `sha256sums`; never `SKIP`. The template's all-zero checksum is a deliberate placeholder.
+- Updaters only rewrite single-element checksum arrays. An update that needs more (new dependencies, changed sources) must be flagged as out of date, not guessed.
+- Bash uses dynamic scoping: a variable in a test or updater with the same name as a `local` in `run_update` (`current`, `latest`, `sums`, `work`, `array`, `sum`) is shadowed.
