@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs Advanced Combat Tracker in the FFXIV wine prefix of XIVLauncher.Core,
-# first copying ACT and the packaged plugins into the prefix.
+# first linking ACT and the packaged plugins into the prefix.
 # Usage: advanced-combat-tracker [--setup]
 #   --setup  install .NET Framework 4.8 into the prefix
 # Environment:
@@ -10,7 +10,6 @@
 
 ACT_SHARE=${ACT_SHARE:-/usr/share/advanced-combat-tracker}
 PROC=${PROC:-/proc}
-MARKER=.managed-by-pacman
 NET48_RELEASE=528040
 
 die() {
@@ -115,47 +114,51 @@ setup() {
     winetricks -q dotnet48
 }
 
-# sync_dir SRC DST [mirror]: copies the files of SRC that differ in DST. With
-# "mirror", also removes files of DST that are not in SRC.
-sync_dir() {
-  local file rel
+# link_dir SRC DST: symlinks every file of SRC into DST, which keeps its real
+# directories. Links to the package are refreshed; anything else already at a
+# path is left alone.
+link_dir() {
+  local file dst
   while IFS= read -r -d '' file; do
-    rel=${file#"$1"/}
-    cmp -s "$file" "$2/$rel" || install -Dm644 "$file" "$2/$rel"
+    dst=$2/${file#"$1"/}
+    if [[ -L $dst && $(readlink "$dst") == "$ACT_SHARE"/* ]]; then
+      [[ $(readlink "$dst") == "$file" ]] && continue
+    elif [[ -e $dst || -L $dst ]]; then
+      echo "advanced-combat-tracker: $dst is not a package link; leaving it" >&2
+      continue
+    fi
+    mkdir -p "$(dirname "$dst")"
+    ln -sfn "$file" "$dst"
   done < <(find "$1" -type f -print0)
-
-  if [[ ${3:-} == mirror && -d $2 ]]; then
-    while IFS= read -r -d '' file; do
-      rel=${file#"$2"/}
-      if [[ $rel != "$MARKER" && ! -e $1/$rel ]]; then
-        rm -f "$file"
-      fi
-    done < <(find "$2" -type f -print0)
-  fi
 }
 
-# Installs the packaged app and plugins into the prefix. Plugin directories are
-# owned by the package; everything else in the prefix is left alone.
-sync_files() {
+# prune_links DIR: removes links into the package whose target is gone, and
+# directories they leave empty.
+prune_links() {
+  local link
+  while IFS= read -r -d '' link; do
+    if [[ $(readlink "$link") == "$ACT_SHARE"/* && ! -e $link ]]; then
+      rm -f "$link"
+      rmdir "$(dirname "$link")" 2>/dev/null || true
+    fi
+  done < <(find "$1" -type l -print0)
+}
+
+# Links the packaged app and plugins into the prefix.
+link_files() {
   local app=$PREFIX/drive_c/advanced-combat-tracker plugin name
-  sync_dir "$ACT_SHARE/app" "$app"
+  mkdir -p "$app"
+  link_dir "$ACT_SHARE/app" "$app"
 
   for plugin in "$ACT_SHARE"/plugins/*/; do
     [[ -d $plugin ]] || continue
     name=$(basename "$plugin")
-    if [[ ! -e $app/Plugins/$name/$MARKER ]]; then
+    if [[ ! -d $app/Plugins/$name ]]; then
       echo "New plugin $name: in ACT, open Plugins > Plugin Listing and add C:\\advanced-combat-tracker\\Plugins\\$name" >&2
     fi
-    sync_dir "${plugin%/}" "$app/Plugins/$name" mirror
-    touch "$app/Plugins/$name/$MARKER"
+    link_dir "${plugin%/}" "$app/Plugins/$name"
   done
-
-  for plugin in "$app"/Plugins/*/; do
-    name=$(basename "$plugin")
-    if [[ -e $plugin$MARKER && ! -d $ACT_SHARE/plugins/$name ]]; then
-      rm -rf "$plugin"
-    fi
-  done
+  prune_links "$app"
 }
 
 run_act() {
@@ -180,7 +183,7 @@ main() {
     return
   fi
   check_dotnet || die ".NET Framework 4.8 is missing from $PREFIX; run: advanced-combat-tracker --setup"
-  sync_files
+  link_files
   run_act
 }
 

@@ -141,31 +141,63 @@ check ".NET 4.7.2 is rejected" "$((  $(ok in_launcher bash -c "source '$launcher
 reset; rm "$prefix/system.reg"
 check "missing registry is rejected" "$((  $(ok in_launcher bash -c "source '$launcher'; PREFIX='$prefix'; check_dotnet") != 0 ? 0 : 1 ))"
 
-# File sync
+# Linking
 app=$prefix/drive_c/advanced-combat-tracker
-sync() { in_launcher bash -c "source '$launcher'; PREFIX='$prefix'; sync_files"; }
+plugin=$app/Plugins/FFXIV_ACT_Plugin
+link() { in_launcher bash -c "source '$launcher'; PREFIX='$prefix'; link_files"; }
+points_to() { [[ -L $1 && $(readlink "$1") == "$2" ]]; }
 reset
-sync
-check "sync installs ACT" "$([[ -f $app/Advanced\ Combat\ Tracker.exe ]]; echo $?)"
-check "sync installs plugins" "$([[ -f $app/Plugins/FFXIV_ACT_Plugin/FFXIV_ACT_Plugin.dll ]]; echo $?)"
-check "first sync tells how to add the plugin" "$(out_has 'New plugin FFXIV_ACT_Plugin'; echo $?)"
-sync
-check "second sync stays quiet" "$([[ ! -s $tmp/out ]]; echo $?)"
+link
+check "ACT is linked to the package" "$(points_to "$app/Advanced Combat Tracker.exe" "$share/app/Advanced Combat Tracker.exe"; echo $?)"
+check "plugins are linked to the package" "$(points_to "$plugin/FFXIV_ACT_Plugin.dll" "$share/plugins/FFXIV_ACT_Plugin/FFXIV_ACT_Plugin.dll"; echo $?)"
+check "directories stay real" "$([[ -d $plugin && ! -L $plugin && ! -L $app ]]; echo $?)"
+check "first link tells how to add the plugin" "$(out_has 'New plugin FFXIV_ACT_Plugin'; echo $?)"
+link
+check "second link stays quiet" "$([[ ! -s $tmp/out ]]; echo $?)"
+
+echo changed >"$share/app/Advanced Combat Tracker.exe"
+check "package changes show through the link" "$(grep -q changed "$app/Advanced Combat Tracker.exe"; echo $?)"
 
 echo user >"$app/user.cfg"
-echo changed >"$share/app/Advanced Combat Tracker.exe"
-echo stale >"$app/Plugins/FFXIV_ACT_Plugin/old-deucalion.dll"
-sync
-check "sync updates changed files" "$(grep -q changed "$app/Advanced Combat Tracker.exe"; echo $?)"
-check "sync keeps user files in the app directory" "$([[ -f $app/user.cfg ]]; echo $?)"
-check "sync removes stale files from plugin directories" "$([[ ! -e $app/Plugins/FFXIV_ACT_Plugin/old-deucalion.dll ]]; echo $?)"
+echo new >"$share/plugins/FFXIV_ACT_Plugin/new.dll"
+link
+check "new package files are linked" "$(points_to "$plugin/new.dll" "$share/plugins/FFXIV_ACT_Plugin/new.dll"; echo $?)"
+check "user files are kept" "$([[ -f $app/user.cfg && ! -L $app/user.cfg ]]; echo $?)"
+
+echo written >"$plugin/written-by-plugin.dat"
+rm "$share/plugins/FFXIV_ACT_Plugin/new.dll"
+link
+check "links to removed package files are pruned" "$([[ ! -e $plugin/new.dll && ! -L $plugin/new.dll ]]; echo $?)"
+check "files written next to links are kept" "$([[ -f $plugin/written-by-plugin.dat ]]; echo $?)"
 
 mkdir -p "$app/Plugins/UserPlugin"
 echo mine >"$app/Plugins/UserPlugin/p.dll"
+ln -s /elsewhere "$app/Plugins/UserPlugin/foreign-link"
+rm "$plugin/written-by-plugin.dat"
 rm -r "$share/plugins/FFXIV_ACT_Plugin"
-sync
-check "sync removes plugins that are no longer packaged" "$([[ ! -e $app/Plugins/FFXIV_ACT_Plugin ]]; echo $?)"
-check "sync keeps plugins it does not own" "$([[ -f $app/Plugins/UserPlugin/p.dll ]]; echo $?)"
+link
+check "plugins that are no longer packaged are removed" "$([[ ! -e $plugin && ! -L $plugin/FFXIV_ACT_Plugin.dll ]]; echo $?)"
+check "plugins the package does not own are kept" "$([[ -f $app/Plugins/UserPlugin/p.dll ]]; echo $?)"
+check "foreign links are kept" "$([[ -L $app/Plugins/UserPlugin/foreign-link ]]; echo $?)"
+
+reset
+mkdir -p "$app"
+echo mine >"$app/Advanced Combat Tracker.exe"
+link
+check "a real file at a link path is kept" "$(grep -q mine "$app/Advanced Combat Tracker.exe" && [[ ! -L "$app/Advanced Combat Tracker.exe" ]]; echo $?)"
+check "a real file at a link path is reported" "$(out_has 'not a package link'; echo $?)"
+
+reset
+mkdir -p "$app"
+ln -s /elsewhere "$app/Advanced Combat Tracker.exe"
+link
+check "a foreign link at a link path is kept" "$([[ $(readlink "$app/Advanced Combat Tracker.exe") == /elsewhere ]]; echo $?)"
+
+reset
+mkdir -p "$app"
+ln -s "$share/app/gone.exe" "$app/Advanced Combat Tracker.exe"
+link
+check "a stale link into the package is replaced" "$(points_to "$app/Advanced Combat Tracker.exe" "$share/app/Advanced Combat Tracker.exe"; echo $?)"
 
 # Whole launcher
 run_main() {
