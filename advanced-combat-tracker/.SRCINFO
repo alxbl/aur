@@ -1,7 +1,7 @@
 pkgbase = advanced-combat-tracker
 	pkgdesc = Advanced Combat Tracker v3 for FFXIV under wine
 	pkgver = 3.8.5.288
-	pkgrel = 1
+	pkgrel = 2
 	url = https://advancedcombattracker.com
 	install = advanced-combat-tracker.install
 	arch = any

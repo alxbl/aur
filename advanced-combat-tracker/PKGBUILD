@@ -2,7 +2,7 @@
 
 pkgname=advanced-combat-tracker
 pkgver=3.8.5.288
-pkgrel=1
+pkgrel=2
 pkgdesc='Advanced Combat Tracker v3 for FFXIV under wine'
 arch=('any')
 url='https://advancedcombattracker.com'
