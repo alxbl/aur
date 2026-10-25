@@ -1,0 +1,4 @@
+post_install() {
+  echo "ACT enables this plugin the first time it runs through 'advanced-combat-tracker'."
+  echo "The plugin downloads its CEF browser engine (about 72 MB) on first use."
+}

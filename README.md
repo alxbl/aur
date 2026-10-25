@@ -52,6 +52,7 @@ update/test.sh       # offline tests for the above
 | `istioctl-bin` | Istio command-line tool |
 | `advanced-combat-tracker` | Advanced Combat Tracker v3 for FFXIV under wine. Run `advanced-combat-tracker --setup` once, then `advanced-combat-tracker`. It finds the XIVLauncher.Core prefix (`~/.xlcore/wineprefix`) and wine build by itself; `ACT_PREFIX` and `ACT_WINE` override. |
 | `ffxiv-act-parser` | FFXIV parsing plugin for ACT, with the Deucalion network capture library |
+| `act-overlay-plugin` | OverlayPlugin for ACT. The plugin downloads its own CEF browser engine on first use. |
 
 Packages that ship a script keep its tests next to it in `<pkgname>/test.sh`.
 
