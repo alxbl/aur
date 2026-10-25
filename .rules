@@ -8,6 +8,8 @@ Source-only PKGBUILD repository for binary tools without official or AUR package
 - Bump packages with `update/check-all.sh`; review the diff before committing. `-n` only reports.
 - Run `update/test.sh` after changing `update/lib.sh` or `update/check-all.sh`.
 - A package that ships a script has `<pkgname>/test.sh`; run it after changing the script. Pin the sha256 of local source files in the PKGBUILD; the test checks they are current.
+- Commit messages are a single concise line naming the package(s) changed and why, with no body. `paru -Sy --pkgbuilds` shows the history, so it must read at a glance.
+- Merge PRs with a squash, after rebasing the branch on `main`. The PR title becomes the commit message, so write it by the rule above; the PR body is not kept.
 - Build and test packages in a scratch copy, not in the worktree. To try paru against the repo, use a scratch `paru.conf` via `XDG_CONFIG_HOME` and `XDG_CACHE_HOME`.
 
 ## Traps
