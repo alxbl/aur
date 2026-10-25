@@ -1,0 +1,27 @@
+# Maintainer: alxbl
+
+pkgname=istioctl-bin
+pkgver=1.31.3
+pkgrel=1
+pkgdesc='Istio service mesh command-line tool (upstream release binary)'
+arch=('x86_64' 'aarch64')
+url='https://istio.io'
+license=('Apache-2.0')
+provides=("istioctl=${pkgver}")
+conflicts=('istioctl')
+options=('!strip' '!debug')
+source=("istio-LICENSE-${pkgver}::https://raw.githubusercontent.com/istio/istio/${pkgver}/LICENSE")
+source_x86_64=("istioctl-${pkgver}-amd64.tar.gz::https://github.com/istio/istio/releases/download/${pkgver}/istioctl-${pkgver}-linux-amd64.tar.gz")
+source_aarch64=("istioctl-${pkgver}-arm64.tar.gz::https://github.com/istio/istio/releases/download/${pkgver}/istioctl-${pkgver}-linux-arm64.tar.gz")
+sha256sums=('9fa6e54dafda853bb3cdc01486b677a55102f0d488282a85ba6e426d9125f8c5')
+sha256sums_x86_64=('382c3004ce2e9c5ed3064b092ae0da7f6bbe30c766a1be282f45725add004860')
+sha256sums_aarch64=('7476801623dbb900073cb1dba6a23b6a15c564b7e92b208aed36829315fefff1')
+
+package() {
+  install -Dm755 istioctl "$pkgdir/usr/bin/istioctl"
+  install -Dm644 "istio-LICENSE-${pkgver}" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  ./istioctl completion bash | install -Dm644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/istioctl"
+  ./istioctl completion zsh | install -Dm644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_istioctl"
+  ./istioctl completion fish | install -Dm644 /dev/stdin "$pkgdir/usr/share/fish/vendor_completions.d/istioctl.fish"
+}
