@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Updater for istioctl-bin. Usage: istioctl-bin.sh [-n]
+# Updater for istioctl-bin.
+# Usage: istioctl-bin.sh [-n]
 source "$(dirname "$0")/lib.sh"
 
 latest_version() {

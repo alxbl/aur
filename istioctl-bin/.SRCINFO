@@ -1,7 +1,7 @@
 pkgbase = istioctl-bin
-	pkgdesc = Istio service mesh command-line tool (upstream release binary)
+	pkgdesc = Istio service mesh command-line tool
 	pkgver = 1.31.3
-	pkgrel = 1
+	pkgrel = 2
 	url = https://istio.io
 	arch = x86_64
 	arch = aarch64

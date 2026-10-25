@@ -2,6 +2,9 @@
 
 Personal PKGBUILD repository for binary tools that have no official or AUR package. Each directory is one package; nothing is pre-built.
 
+> **NOTE**: This has only been tested with `paru` and may or may not work with
+  other AUR package managers.
+
 ## Usage
 
 Add to `/etc/paru.conf` or `~/.config/paru/paru.conf`:
@@ -11,11 +14,11 @@ Add to `/etc/paru.conf` or `~/.config/paru/paru.conf`:
 Url = https://github.com/alxbl/aur
 ```
 
-Paru reads custom `[name]` sections as PKGBUILD repositories, so this works alongside the AUR without a separate server.
+`paru` reads custom `[name]` sections as PKGBUILD repositories, so this works alongside the AUR without a separate server.
 
 ### Sync
 
-Paru does not fetch a `Url` repository on its own. Until it has been downloaded, `paru -Sl alxbl` reports `repo alxbl not downloaded`. Download it, and refresh it to pick up new versions, with:
+`paru` does not fetch a `Url` repository on its own. Until it has been downloaded, `paru -Sl alxbl` reports `repo alxbl not downloaded`. Download it, and refresh it to pick up new versions, with:
 
 ```sh
 paru -Sy --pkgbuilds
