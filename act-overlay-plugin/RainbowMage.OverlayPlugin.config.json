@@ -1,0 +1,57 @@
+{
+  "Overlays": [
+    {
+      "forceWhiteBackground": false,
+      "GlobalHotkeys": [],
+      "ActwsCompatibility": false,
+      "NoFocus": true,
+      "Zoom": 0,
+      "ForceWhiteBackground": false,
+      "MuteWhenHidden": false,
+      "Name": "Default",
+      "Uuid": "2884a5bc-609f-4e3b-bc26-34aae2eb9a6e",
+      "IsVisible": true,
+      "Disabled": false,
+      "IsClickThru": false,
+      "Position": "20, 20",
+      "Size": "1200, 300",
+      "Url": "https://bsides.github.io/horizoverlay/",
+      "MaxFrameRate": 30,
+      "GlobalHotkeyEnabled": false,
+      "GlobalHotkey": 0,
+      "GlobalHotkeyModifiers": 0,
+      "GlobalHotkeyType": 0,
+      "IsLocked": false,
+      "LogConsoleMessages": true,
+      "HideOutOfCombat": false,
+      "$type": "RainbowMage.OverlayPlugin.Overlays.MiniParseOverlayConfig, OverlayPlugin.Core, Version=0.19.111.0, Culture=neutral, PublicKeyToken=null"
+    }
+  ],
+  "FollowLatestLog": false,
+  "HideOverlaysWhenNotActive": true,
+  "HideOverlayDuringCutscene": false,
+  "ErrorReports": false,
+  "UpdateCheck": false,
+  "WSServerIP": "127.0.0.1",
+  "WSServerPort": 10501,
+  "WSServerSSL": false,
+  "WSServerRunning": false,
+  "TunnelRegion": null,
+  "Token": null,
+  "CachedOpcodeFile": {},
+  "CachedOpcodeOverlayPluginVersion": "",
+  "Version": null,
+  "EventSourceConfigs": {
+    "MiniParse": {
+      "OverlayData": {},
+      "UpdateInterval": 1,
+      "EnmityIntervalMs": 100,
+      "SortKey": "encdps",
+      "SortDesc": true,
+      "UpdateDpsDuringImport": false,
+      "EndEncounterAfterWipe": false,
+      "EndEncounterOutOfCombat": false,
+      "LogLines": false
+    }
+  }
+}

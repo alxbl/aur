@@ -202,6 +202,20 @@ reset; sync; before=$(sha256sum "$cfg")
 rm "$app/Plugins/FFXIV_ACT_Plugin/.managed-by-pacman"; sync
 check "a registered plugin is not added twice" "$([[ $(grep -cF FFXIV_ACT_Plugin.dll "$cfg") == 1 ]]; echo $?)"
 
+# Config seeding
+seeds=$tmp/seeds
+seed() { in_launcher bash -c "export ACT_SHARE='$seeds'; source '$launcher'; PREFIX='$prefix'; seed_configs"; }
+reset; rm -rf "$seeds"; mkdir -p "$seeds/config"
+echo '{"a":1}' >"$seeds/config/Plugin.config.json"
+seed
+check "a packaged config is seeded when missing" "$(grep -q '"a":1' "$cfgdir/Plugin.config.json"; echo $?)"
+echo '{"user":true}' >"$cfgdir/Plugin.config.json"
+seed
+check "an existing config is not replaced" "$(grep -q user "$cfgdir/Plugin.config.json"; echo $?)"
+rm -rf "$seeds/config"
+seed; rc=$?
+check "no packaged configs is not an error" "$((rc == 0 ? 0 : 1))"
+
 # Whole launcher
 run_main() {
   (
@@ -211,7 +225,9 @@ run_main() {
   ) >"$tmp/out" 2>&1
 }
 reset
+mkdir -p "$share/config"; echo '{"seeded":true}' >"$share/config/Plugin.config.json"
 run_main; rc=$?
+check "launcher seeds packaged configs" "$(grep -q seeded "$cfgdir/Plugin.config.json"; echo $?)"
 check "launcher runs ACT through wine" "$((rc == 0 ? 0 : 1))"
 check "launcher uses the detected prefix and sync" "$(grep -q "prefix=$prefix fsync=1 esync=" "$RECORD"; echo $?)"
 check "launcher joins the detected wineserver" "$(grep -q "server=$wine_a/bin/wineserver" "$RECORD"; echo $?)"

@@ -1,7 +1,7 @@
 pkgbase = act-overlay-plugin
 	pkgdesc = OverlayPlugin for Advanced Combat Tracker
 	pkgver = 0.19.111
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/OverlayPlugin/OverlayPlugin
 	install = act-overlay-plugin.install
 	arch = any
@@ -10,6 +10,8 @@ pkgbase = act-overlay-plugin
 	optdepends = ffxiv-act-parser: FFXIV data for the overlays
 	options = !strip
 	source = OverlayPlugin-0.19.111.zip::https://github.com/OverlayPlugin/OverlayPlugin/releases/download/v0.19.111/OverlayPlugin-0.19.111.zip
+	source = RainbowMage.OverlayPlugin.config.json
 	sha256sums = 84ec07042f793752c3601cdd79f7d6cf711012222afdd956d7c723ac0347a00c
+	sha256sums = 5488499523d09d84972e2a5e280ee297bf0fef4928c02e6516ad475bef57348d
 
 pkgname = act-overlay-plugin

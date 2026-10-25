@@ -2,7 +2,7 @@
 
 pkgname=advanced-combat-tracker
 pkgver=3.8.5.288
-pkgrel=4
+pkgrel=5
 pkgdesc='Advanced Combat Tracker v3 for FFXIV under wine'
 arch=('any')
 url='https://advancedcombattracker.com'
@@ -18,7 +18,7 @@ source=("ACTv3-${pkgver}.zip::https://github.com/EQAditu/AdvancedCombatTracker/r
 # The first checksum is bumped by update/advanced-combat-tracker.sh; the local
 # files are checked by test.sh.
 sha256sums=('1a0ca91375d79daf3d2cbbb2920c90dbc40f3be2421cdc6765d93e27bf25e4b0'
-            'bfab85184ded01ac2d6dfc4040d20b2c8dfa0cc492e3ac512175dec016df1bf8'
+            '9ce7faa03e6de392231db51434b59f55b26d1b7f4275d3331117942a186f1881'
             '83678583fce5eb84971ec99169b7633dea6499af7093312fcc728a2a50a5a8b4')
 
 build() {

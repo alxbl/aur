@@ -115,12 +115,18 @@ setup() {
     winetricks -q dotnet48
 }
 
+# Prints ACT's per-user data directory in the prefix.
+act_data_dir() {
+  echo "$PREFIX/drive_c/users/$(id -un)/AppData/Roaming/Advanced Combat Tracker"
+}
+
 # register_plugin NAME: enables NAME in ACT's config, whose DLL is NAME.dll in
 # its plugin directory. Creates a minimal config if there is none, which also
 # skips ACT's first-run wizard.
 register_plugin() {
-  local dir=$PREFIX/drive_c/users/$(id -un)/AppData/Roaming/Advanced\ Combat\ Tracker/Config
-  local cfg=$dir/Advanced\ Combat\ Tracker.config.xml
+  local dir cfg
+  dir=$(act_data_dir)/Config
+  cfg=$dir/Advanced\ Combat\ Tracker.config.xml
   local path="C:\\advanced-combat-tracker\\Plugins\\$1\\$1.dll"
   local entry="        <Plugin Enabled=\"True\" Path=\"$path\" />"
   local nl=$'\r\n' content
@@ -143,6 +149,19 @@ register_plugin() {
     content=${content/'</Config>'/"    <ActPlugins>$nl$entry$nl    </ActPlugins>$nl</Config>"}
   fi
   printf '%s\n' "$content" >"$cfg"
+}
+
+# Copies the packaged default configs into ACT's Config directory, except those
+# that already exist, so a user's settings are never replaced.
+seed_configs() {
+  local file dst
+  for file in "$ACT_SHARE"/config/*; do
+    [[ -f $file ]] || continue
+    dst=$(act_data_dir)/Config/$(basename "$file")
+    if [[ ! -e $dst ]]; then
+      install -Dm644 "$file" "$dst"
+    fi
+  done
 }
 
 # sync_dir SRC DST [mirror]: copies the files of SRC that differ in DST. With
@@ -212,6 +231,7 @@ main() {
   fi
   check_dotnet || die ".NET Framework 4.8 is missing from $PREFIX; run: advanced-combat-tracker --setup"
   sync_files
+  seed_configs
   run_act
 }
 
