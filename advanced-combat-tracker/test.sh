@@ -202,33 +202,16 @@ reset; sync; before=$(sha256sum "$cfg")
 rm "$app/Plugins/FFXIV_ACT_Plugin/.managed-by-pacman"; sync
 check "a registered plugin is not added twice" "$([[ $(grep -cF FFXIV_ACT_Plugin.dll "$cfg") == 1 ]]; echo $?)"
 
-# Gecko
-gecko=$tmp/gecko
-cache=$tmp/cache
-install_gecko() { in_launcher bash -c "export GECKO_SHARE='$gecko' XDG_CACHE_HOME='$cache'; source '$launcher'; install_gecko"; }
-rm -rf "$gecko" "$cache"; mkdir -p "$gecko"
-echo x86 >"$gecko/wine-gecko-2.47.4-x86.msi"; echo x64 >"$gecko/wine-gecko-2.47.4-x86_64.msi"
-install_gecko
-check "Gecko installers are copied to the wine cache" "$([[ -f $cache/wine/wine-gecko-2.47.4-x86.msi && -f $cache/wine/wine-gecko-2.47.4-x86_64.msi && ! -L $cache/wine/wine-gecko-2.47.4-x86.msi ]]; echo $?)"
-echo downloaded >"$cache/wine/wine-gecko-2.47.4-x86.msi"
-install_gecko
-check "Gecko installers already in the cache are kept" "$(grep -q downloaded "$cache/wine/wine-gecko-2.47.4-x86.msi"; echo $?)"
-rm -rf "$gecko" "$cache"
-install_gecko; rc=$?
-check "missing Gecko installers are not an error" "$((rc == 0 ? 0 : 1))"
-
 # Whole launcher
 run_main() {
   (
-    export HOME=$home PROC=$proc ACT_SHARE=$share GECKO_SHARE=$tmp/gecko2 XDG_CACHE_HOME=$tmp/cache2
+    export HOME=$home PROC=$proc ACT_SHARE=$share
     unset ACT_PREFIX ACT_WINE
     "$launcher" "$@"
   ) >"$tmp/out" 2>&1
 }
 reset
-rm -rf "$tmp/gecko2" "$tmp/cache2"; mkdir -p "$tmp/gecko2"; echo g >"$tmp/gecko2/wine-gecko-2.47.4-x86_64.msi"
 run_main; rc=$?
-check "launcher installs Gecko" "$([[ -f $tmp/cache2/wine/wine-gecko-2.47.4-x86_64.msi ]]; echo $?)"
 check "launcher runs ACT through wine" "$((rc == 0 ? 0 : 1))"
 check "launcher uses the detected prefix and sync" "$(grep -q "prefix=$prefix fsync=1 esync=" "$RECORD"; echo $?)"
 check "launcher joins the detected wineserver" "$(grep -q "server=$wine_a/bin/wineserver" "$RECORD"; echo $?)"

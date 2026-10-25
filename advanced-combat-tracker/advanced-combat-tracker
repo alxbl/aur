@@ -6,12 +6,10 @@
 # Environment:
 #   ACT_PREFIX, ACT_WINE  override prefix and wine detection
 #   ACT_SHARE             directory holding the packaged app/ and plugins/
-#   GECKO_SHARE           directory holding the wine-gecko installers
 #   PROC                  location of the proc filesystem
 
 ACT_SHARE=${ACT_SHARE:-/usr/share/advanced-combat-tracker}
 PROC=${PROC:-/proc}
-GECKO_SHARE=${GECKO_SHARE:-/usr/share/wine/gecko}
 MARKER=.managed-by-pacman
 NET48_RELEASE=528040
 
@@ -117,17 +115,6 @@ setup() {
     winetricks -q dotnet48
 }
 
-# Copies the Gecko installers to where wine looks for them, so that it installs
-# Gecko into the prefix without prompting. ACT embeds a web browser control.
-install_gecko() {
-  local msi dst=${XDG_CACHE_HOME:-$HOME/.cache}/wine
-  for msi in "$GECKO_SHARE"/*.msi; do
-    if [[ -f $msi && ! -e $dst/$(basename "$msi") ]]; then
-      install -Dm644 "$msi" "$dst/$(basename "$msi")"
-    fi
-  done
-}
-
 # register_plugin NAME: enables NAME in ACT's config, whose DLL is NAME.dll in
 # its plugin directory. Creates a minimal config if there is none, which also
 # skips ACT's first-run wizard.
@@ -224,7 +211,6 @@ main() {
     return
   fi
   check_dotnet || die ".NET Framework 4.8 is missing from $PREFIX; run: advanced-combat-tracker --setup"
-  install_gecko
   sync_files
   run_act
 }
