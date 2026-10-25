@@ -2,3 +2,7 @@ post_install() {
   echo "Run 'advanced-combat-tracker --setup' once to add .NET Framework 4.8 to the XIVLauncher wine prefix."
   echo "Then start ACT with 'advanced-combat-tracker'."
 }
+
+post_remove() {
+  echo "ACT's files remain in the wine prefix; delete drive_c/advanced-combat-tracker there to remove them."
+}

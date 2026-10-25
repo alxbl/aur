@@ -1,4 +1,5 @@
 post_install() {
+  echo "ACT's first-run wizard offers to download this plugin; skip it, as that copy is not managed by pacman."
   echo "On the first run of 'advanced-combat-tracker', add the plugin in ACT under Plugins > Plugin Listing:"
   echo '  C:\advanced-combat-tracker\Plugins\FFXIV_ACT_Plugin\FFXIV_ACT_Plugin.dll'
   echo "Then select Deucalion injection for network capture in its settings. No setcap is needed."
