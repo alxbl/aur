@@ -148,7 +148,7 @@ reset
 sync
 check "sync installs ACT" "$([[ -f $app/Advanced\ Combat\ Tracker.exe ]]; echo $?)"
 check "sync installs plugins" "$([[ -f $app/Plugins/FFXIV_ACT_Plugin/FFXIV_ACT_Plugin.dll ]]; echo $?)"
-check "first sync tells how to add the plugin" "$(out_has 'New plugin FFXIV_ACT_Plugin'; echo $?)"
+check "first sync reports the enabled plugin" "$(out_has 'Enabled plugin FFXIV_ACT_Plugin'; echo $?)"
 sync
 check "second sync stays quiet" "$([[ ! -s $tmp/out ]]; echo $?)"
 
@@ -166,6 +166,41 @@ rm -r "$share/plugins/FFXIV_ACT_Plugin"
 sync
 check "sync removes plugins that are no longer packaged" "$([[ ! -e $app/Plugins/FFXIV_ACT_Plugin ]]; echo $?)"
 check "sync keeps plugins it does not own" "$([[ -f $app/Plugins/UserPlugin/p.dll ]]; echo $?)"
+
+# Plugin registration in ACT's config
+cfgdir=$prefix/drive_c/users/$(id -un)/AppData/Roaming/Advanced\ Combat\ Tracker/Config
+cfg=$prefix/drive_c/users/$(id -un)/AppData/Roaming/Advanced\ Combat\ Tracker/Config/Advanced\ Combat\ Tracker.config.xml
+entry='Path="C:\advanced-combat-tracker\Plugins\FFXIV_ACT_Plugin\FFXIV_ACT_Plugin.dll"'
+reset; sync
+check "a missing ACT config is created with the plugin enabled" "$(grep -qF "<Plugin Enabled=\"True\" $entry />" "$cfg"; echo $?)"
+check "the created config is UTF-8 with a BOM and CRLF" "$([[ $(head -c 3 "$cfg" | xxd -p) == efbbbf ]] && grep -q $'\r' "$cfg"; echo $?)"
+
+reset; mkdir -p "$cfgdir"
+printf '\xef\xbb\xbf<?xml version="1.0"?>\r\n<Config>\r\n    <SettingsSerializer>\r\n        <CheckBox Name="a" Value="True" />\r\n    </SettingsSerializer>\r\n    <ActPlugins>\r\n        <Plugin Enabled="True" Path="C:\\other.dll" />\r\n    </ActPlugins>\r\n</Config>\r\n' >"$cfg"
+sync
+check "an existing config gains the plugin" "$(grep -qF "$entry" "$cfg"; echo $?)"
+check "an existing config keeps its other plugins" "$(grep -qF 'Path="C:\other.dll"' "$cfg"; echo $?)"
+check "an existing config keeps its settings" "$(grep -qF '<CheckBox Name="a" Value="True" />' "$cfg"; echo $?)"
+check "an existing config stays well-formed" "$(python3 -I -c "import sys,xml.dom.minidom as m; m.parse(sys.argv[1])" "$cfg" 2>/dev/null; echo $?)"
+
+reset; mkdir -p "$cfgdir"
+printf '<Config>\r\n    <ActPlugins />\r\n</Config>\r\n' >"$cfg"
+sync
+check "an empty plugin section gains the plugin" "$(grep -qF "$entry" "$cfg" && python3 -I -c "import sys,xml.dom.minidom as m; m.parse(sys.argv[1])" "$cfg"; echo $?)"
+
+reset; mkdir -p "$cfgdir"
+printf '<Config>\r\n</Config>\r\n' >"$cfg"
+sync
+check "a config without a plugin section gains one" "$(grep -qF "$entry" "$cfg" && python3 -I -c "import sys,xml.dom.minidom as m; m.parse(sys.argv[1])" "$cfg"; echo $?)"
+
+reset; sync
+sed -i '/FFXIV_ACT_Plugin.dll/d' "$cfg"
+sync
+check "a plugin the user removed is not re-enabled" "$(grep -qF FFXIV_ACT_Plugin "$cfg"; [[ $? -ne 0 ]]; echo $?)"
+
+reset; sync; before=$(sha256sum "$cfg")
+rm "$app/Plugins/FFXIV_ACT_Plugin/.managed-by-pacman"; sync
+check "a registered plugin is not added twice" "$([[ $(grep -cF FFXIV_ACT_Plugin.dll "$cfg") == 1 ]]; echo $?)"
 
 # Gecko
 gecko=$tmp/gecko

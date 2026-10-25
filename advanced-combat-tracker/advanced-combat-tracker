@@ -128,6 +128,36 @@ install_gecko() {
   done
 }
 
+# register_plugin NAME: enables NAME in ACT's config, whose DLL is NAME.dll in
+# its plugin directory. Creates a minimal config if there is none, which also
+# skips ACT's first-run wizard.
+register_plugin() {
+  local dir=$PREFIX/drive_c/users/$(id -un)/AppData/Roaming/Advanced\ Combat\ Tracker/Config
+  local cfg=$dir/Advanced\ Combat\ Tracker.config.xml
+  local path="C:\\advanced-combat-tracker\\Plugins\\$1\\$1.dll"
+  local entry="        <Plugin Enabled=\"True\" Path=\"$path\" />"
+  local nl=$'\r\n' content
+
+  if [[ ! -f $cfg ]]; then
+    mkdir -p "$dir"
+    printf '\xef\xbb\xbf<?xml version="1.0" encoding="utf-8"?>\r\n<Config>\r\n    <ActPlugins>\r\n%s\r\n    </ActPlugins>\r\n</Config>\r\n' "$entry" >"$cfg"
+    return 0
+  fi
+  if grep -qF "Path=\"$path\"" "$cfg"; then
+    return 0
+  fi
+
+  content=$(<"$cfg")
+  if [[ $content == *'</ActPlugins>'* ]]; then
+    content=${content/'</ActPlugins>'/"$entry$nl    </ActPlugins>"}
+  elif [[ $content == *'<ActPlugins />'* ]]; then
+    content=${content/'<ActPlugins />'/"<ActPlugins>$nl$entry$nl    </ActPlugins>"}
+  else
+    content=${content/'</Config>'/"    <ActPlugins>$nl$entry$nl    </ActPlugins>$nl</Config>"}
+  fi
+  printf '%s\n' "$content" >"$cfg"
+}
+
 # sync_dir SRC DST [mirror]: copies the files of SRC that differ in DST. With
 # "mirror", also removes files of DST that are not in SRC.
 sync_dir() {
@@ -156,8 +186,9 @@ sync_files() {
   for plugin in "$ACT_SHARE"/plugins/*/; do
     [[ -d $plugin ]] || continue
     name=$(basename "$plugin")
-    if [[ ! -e $app/Plugins/$name/$MARKER ]]; then
-      echo "New plugin $name: in ACT, open Plugins > Plugin Listing and add C:\\advanced-combat-tracker\\Plugins\\$name" >&2
+    if [[ ! -e $app/Plugins/$name/$MARKER && -f $plugin$name.dll ]]; then
+      register_plugin "$name"
+      echo "Enabled plugin $name in ACT." >&2
     fi
     sync_dir "${plugin%/}" "$app/Plugins/$name" mirror
     touch "$app/Plugins/$name/$MARKER"

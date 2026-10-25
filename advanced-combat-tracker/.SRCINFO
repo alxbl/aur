@@ -14,7 +14,7 @@ pkgbase = advanced-combat-tracker
 	source = advanced-combat-tracker
 	source = advanced-combat-tracker.desktop
 	sha256sums = 1a0ca91375d79daf3d2cbbb2920c90dbc40f3be2421cdc6765d93e27bf25e4b0
-	sha256sums = 3a23541be39a820019999843499481ff2a77a577669428e86c971f8786bbfb37
+	sha256sums = 475ca375f9b13b1dcc33b8d492fd1df55ad699205453033ddcf61666db82949f
 	sha256sums = 694cc5fba290ebb1f3c3e9b65dee40e2eb64f26fdb33701ebb983bfc8fe6fef4
 
 pkgname = advanced-combat-tracker
