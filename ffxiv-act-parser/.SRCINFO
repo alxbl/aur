@@ -1,12 +1,13 @@
 pkgbase = ffxiv-act-parser
 	pkgdesc = FFXIV parsing plugin for Advanced Combat Tracker
 	pkgver = 3.0.3.4
-	pkgrel = 2
+	pkgrel = 3
 	url = https://github.com/ravahn/FFXIV_ACT_Plugin
 	install = ffxiv-act-parser.install
 	arch = any
 	license = LicenseRef-custom
 	depends = advanced-combat-tracker
+	optdepends = act-overlay-plugin: overlays for the parsed data
 	options = !strip
 	source = FFXIV_ACT_Plugin-3.0.3.4.zip::https://github.com/ravahn/FFXIV_ACT_Plugin/releases/download/3.0.3.4/FFXIV_ACT_Plugin_3.0.3.4.zip
 	sha256sums = 089306e497dd4b8fb79290472f006b889fd21fc3d3816ce41ef9a0300feb2d11
