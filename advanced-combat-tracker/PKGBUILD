@@ -2,13 +2,14 @@
 
 pkgname=advanced-combat-tracker
 pkgver=3.8.5.288
-pkgrel=3
+pkgrel=4
 pkgdesc='Advanced Combat Tracker v3 for FFXIV under wine'
 arch=('any')
 url='https://advancedcombattracker.com'
 # Upstream ships no license text.
 license=('LicenseRef-custom')
 depends=('bash' 'winetricks')
+makedepends=('icoutils')
 options=('!strip')
 install=advanced-combat-tracker.install
 source=("ACTv3-${pkgver}.zip::https://github.com/EQAditu/AdvancedCombatTracker/releases/download/${pkgver}/ACTv3.zip"
@@ -18,14 +19,25 @@ source=("ACTv3-${pkgver}.zip::https://github.com/EQAditu/AdvancedCombatTracker/r
 # files are checked by test.sh.
 sha256sums=('1a0ca91375d79daf3d2cbbb2920c90dbc40f3be2421cdc6765d93e27bf25e4b0'
             'bfab85184ded01ac2d6dfc4040d20b2c8dfa0cc492e3ac512175dec016df1bf8'
-            '694cc5fba290ebb1f3c3e9b65dee40e2eb64f26fdb33701ebb983bfc8fe6fef4')
+            '83678583fce5eb84971ec99169b7633dea6499af7093312fcc728a2a50a5a8b4')
+
+build() {
+  wrestool -x -t14 -n32512 'Advanced Combat Tracker.exe' -o act.ico
+  mkdir icons
+  icotool -x -o icons act.ico
+}
 
 package() {
-  local file
+  local file size
   for file in *.exe *.config; do
     install -Dm644 "$file" "$pkgdir/usr/share/advanced-combat-tracker/app/$file"
   done
   install -dm755 "$pkgdir/usr/share/advanced-combat-tracker/plugins"
+
+  for size in 16 32 48 256; do
+    install -Dm644 icons/*_${size}x${size}x32.png \
+      "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/advanced-combat-tracker.png"
+  done
 
   install -Dm755 advanced-combat-tracker "$pkgdir/usr/bin/advanced-combat-tracker"
   install -Dm644 advanced-combat-tracker.desktop "$pkgdir/usr/share/applications/advanced-combat-tracker.desktop"
