@@ -1,0 +1,20 @@
+pkgbase = istioctl-bin
+	pkgdesc = Istio service mesh command-line tool (upstream release binary)
+	pkgver = 1.31.3
+	pkgrel = 1
+	url = https://istio.io
+	arch = x86_64
+	arch = aarch64
+	license = Apache-2.0
+	provides = istioctl=1.31.3
+	conflicts = istioctl
+	options = !strip
+	options = !debug
+	source = istio-LICENSE-1.31.3::https://raw.githubusercontent.com/istio/istio/1.31.3/LICENSE
+	sha256sums = 9fa6e54dafda853bb3cdc01486b677a55102f0d488282a85ba6e426d9125f8c5
+	source_x86_64 = istioctl-1.31.3-amd64.tar.gz::https://github.com/istio/istio/releases/download/1.31.3/istioctl-1.31.3-linux-amd64.tar.gz
+	sha256sums_x86_64 = 382c3004ce2e9c5ed3064b092ae0da7f6bbe30c766a1be282f45725add004860
+	source_aarch64 = istioctl-1.31.3-arm64.tar.gz::https://github.com/istio/istio/releases/download/1.31.3/istioctl-1.31.3-linux-arm64.tar.gz
+	sha256sums_aarch64 = 7476801623dbb900073cb1dba6a23b6a15c564b7e92b208aed36829315fefff1
+
+pkgname = istioctl-bin
