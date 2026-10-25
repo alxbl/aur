@@ -58,6 +58,8 @@ Packages that ship a script keep its tests next to it in `<pkgname>/test.sh`.
 
 ACT plugin packages install `plugins/<Name>/<Name>.dll` under `/usr/share/advanced-combat-tracker/`. The launcher copies each plugin into the prefix and enables it in ACT's config the first time, creating a minimal config (which also skips ACT's first-run wizard) if there is none.
 
+A plugin package can ship a default config under `/usr/share/advanced-combat-tracker/config/<file>`. The launcher copies it into ACT's `Config/` directory only if no file of that name exists, so existing settings are never replaced.
+
 ## Keeping packages current
 
 ```sh
