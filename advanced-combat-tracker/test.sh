@@ -141,74 +141,94 @@ check ".NET 4.7.2 is rejected" "$((  $(ok in_launcher bash -c "source '$launcher
 reset; rm "$prefix/system.reg"
 check "missing registry is rejected" "$((  $(ok in_launcher bash -c "source '$launcher'; PREFIX='$prefix'; check_dotnet") != 0 ? 0 : 1 ))"
 
-# Linking
+# File sync
 app=$prefix/drive_c/advanced-combat-tracker
-plugin=$app/Plugins/FFXIV_ACT_Plugin
-link() { in_launcher bash -c "source '$launcher'; PREFIX='$prefix'; link_files"; }
-points_to() { [[ -L $1 && $(readlink "$1") == "$2" ]]; }
+sync() { in_launcher bash -c "source '$launcher'; PREFIX='$prefix'; sync_files"; }
 reset
-link
-check "ACT is linked to the package" "$(points_to "$app/Advanced Combat Tracker.exe" "$share/app/Advanced Combat Tracker.exe"; echo $?)"
-check "plugins are linked to the package" "$(points_to "$plugin/FFXIV_ACT_Plugin.dll" "$share/plugins/FFXIV_ACT_Plugin/FFXIV_ACT_Plugin.dll"; echo $?)"
-check "directories stay real" "$([[ -d $plugin && ! -L $plugin && ! -L $app ]]; echo $?)"
-check "first link tells how to add the plugin" "$(out_has 'New plugin FFXIV_ACT_Plugin'; echo $?)"
-link
-check "second link stays quiet" "$([[ ! -s $tmp/out ]]; echo $?)"
-
-echo changed >"$share/app/Advanced Combat Tracker.exe"
-check "package changes show through the link" "$(grep -q changed "$app/Advanced Combat Tracker.exe"; echo $?)"
+sync
+check "sync installs ACT" "$([[ -f $app/Advanced\ Combat\ Tracker.exe ]]; echo $?)"
+check "sync installs plugins" "$([[ -f $app/Plugins/FFXIV_ACT_Plugin/FFXIV_ACT_Plugin.dll ]]; echo $?)"
+check "first sync reports the enabled plugin" "$(out_has 'Enabled plugin FFXIV_ACT_Plugin'; echo $?)"
+sync
+check "second sync stays quiet" "$([[ ! -s $tmp/out ]]; echo $?)"
 
 echo user >"$app/user.cfg"
-echo new >"$share/plugins/FFXIV_ACT_Plugin/new.dll"
-link
-check "new package files are linked" "$(points_to "$plugin/new.dll" "$share/plugins/FFXIV_ACT_Plugin/new.dll"; echo $?)"
-check "user files are kept" "$([[ -f $app/user.cfg && ! -L $app/user.cfg ]]; echo $?)"
-
-echo written >"$plugin/written-by-plugin.dat"
-rm "$share/plugins/FFXIV_ACT_Plugin/new.dll"
-link
-check "links to removed package files are pruned" "$([[ ! -e $plugin/new.dll && ! -L $plugin/new.dll ]]; echo $?)"
-check "files written next to links are kept" "$([[ -f $plugin/written-by-plugin.dat ]]; echo $?)"
+echo changed >"$share/app/Advanced Combat Tracker.exe"
+echo stale >"$app/Plugins/FFXIV_ACT_Plugin/old-deucalion.dll"
+sync
+check "sync updates changed files" "$(grep -q changed "$app/Advanced Combat Tracker.exe"; echo $?)"
+check "sync keeps user files in the app directory" "$([[ -f $app/user.cfg ]]; echo $?)"
+check "sync removes stale files from plugin directories" "$([[ ! -e $app/Plugins/FFXIV_ACT_Plugin/old-deucalion.dll ]]; echo $?)"
 
 mkdir -p "$app/Plugins/UserPlugin"
 echo mine >"$app/Plugins/UserPlugin/p.dll"
-ln -s /elsewhere "$app/Plugins/UserPlugin/foreign-link"
-rm "$plugin/written-by-plugin.dat"
 rm -r "$share/plugins/FFXIV_ACT_Plugin"
-link
-check "plugins that are no longer packaged are removed" "$([[ ! -e $plugin && ! -L $plugin/FFXIV_ACT_Plugin.dll ]]; echo $?)"
-check "plugins the package does not own are kept" "$([[ -f $app/Plugins/UserPlugin/p.dll ]]; echo $?)"
-check "foreign links are kept" "$([[ -L $app/Plugins/UserPlugin/foreign-link ]]; echo $?)"
+sync
+check "sync removes plugins that are no longer packaged" "$([[ ! -e $app/Plugins/FFXIV_ACT_Plugin ]]; echo $?)"
+check "sync keeps plugins it does not own" "$([[ -f $app/Plugins/UserPlugin/p.dll ]]; echo $?)"
 
-reset
-mkdir -p "$app"
-echo mine >"$app/Advanced Combat Tracker.exe"
-link
-check "a real file at a link path is kept" "$(grep -q mine "$app/Advanced Combat Tracker.exe" && [[ ! -L "$app/Advanced Combat Tracker.exe" ]]; echo $?)"
-check "a real file at a link path is reported" "$(out_has 'not a package link'; echo $?)"
+# Plugin registration in ACT's config
+cfgdir=$prefix/drive_c/users/$(id -un)/AppData/Roaming/Advanced\ Combat\ Tracker/Config
+cfg=$prefix/drive_c/users/$(id -un)/AppData/Roaming/Advanced\ Combat\ Tracker/Config/Advanced\ Combat\ Tracker.config.xml
+entry='Path="C:\advanced-combat-tracker\Plugins\FFXIV_ACT_Plugin\FFXIV_ACT_Plugin.dll"'
+reset; sync
+check "a missing ACT config is created with the plugin enabled" "$(grep -qF "<Plugin Enabled=\"True\" $entry />" "$cfg"; echo $?)"
+check "the created config is UTF-8 with a BOM and CRLF" "$([[ $(head -c 3 "$cfg" | xxd -p) == efbbbf ]] && grep -q $'\r' "$cfg"; echo $?)"
 
-reset
-mkdir -p "$app"
-ln -s /elsewhere "$app/Advanced Combat Tracker.exe"
-link
-check "a foreign link at a link path is kept" "$([[ $(readlink "$app/Advanced Combat Tracker.exe") == /elsewhere ]]; echo $?)"
+reset; mkdir -p "$cfgdir"
+printf '\xef\xbb\xbf<?xml version="1.0"?>\r\n<Config>\r\n    <SettingsSerializer>\r\n        <CheckBox Name="a" Value="True" />\r\n    </SettingsSerializer>\r\n    <ActPlugins>\r\n        <Plugin Enabled="True" Path="C:\\other.dll" />\r\n    </ActPlugins>\r\n</Config>\r\n' >"$cfg"
+sync
+check "an existing config gains the plugin" "$(grep -qF "$entry" "$cfg"; echo $?)"
+check "an existing config keeps its other plugins" "$(grep -qF 'Path="C:\other.dll"' "$cfg"; echo $?)"
+check "an existing config keeps its settings" "$(grep -qF '<CheckBox Name="a" Value="True" />' "$cfg"; echo $?)"
+check "an existing config stays well-formed" "$(python3 -I -c "import sys,xml.dom.minidom as m; m.parse(sys.argv[1])" "$cfg" 2>/dev/null; echo $?)"
 
-reset
-mkdir -p "$app"
-ln -s "$share/app/gone.exe" "$app/Advanced Combat Tracker.exe"
-link
-check "a stale link into the package is replaced" "$(points_to "$app/Advanced Combat Tracker.exe" "$share/app/Advanced Combat Tracker.exe"; echo $?)"
+reset; mkdir -p "$cfgdir"
+printf '<Config>\r\n    <ActPlugins />\r\n</Config>\r\n' >"$cfg"
+sync
+check "an empty plugin section gains the plugin" "$(grep -qF "$entry" "$cfg" && python3 -I -c "import sys,xml.dom.minidom as m; m.parse(sys.argv[1])" "$cfg"; echo $?)"
+
+reset; mkdir -p "$cfgdir"
+printf '<Config>\r\n</Config>\r\n' >"$cfg"
+sync
+check "a config without a plugin section gains one" "$(grep -qF "$entry" "$cfg" && python3 -I -c "import sys,xml.dom.minidom as m; m.parse(sys.argv[1])" "$cfg"; echo $?)"
+
+reset; sync
+sed -i '/FFXIV_ACT_Plugin.dll/d' "$cfg"
+sync
+check "a plugin the user removed is not re-enabled" "$(grep -qF FFXIV_ACT_Plugin "$cfg"; [[ $? -ne 0 ]]; echo $?)"
+
+reset; sync; before=$(sha256sum "$cfg")
+rm "$app/Plugins/FFXIV_ACT_Plugin/.managed-by-pacman"; sync
+check "a registered plugin is not added twice" "$([[ $(grep -cF FFXIV_ACT_Plugin.dll "$cfg") == 1 ]]; echo $?)"
+
+# Gecko
+gecko=$tmp/gecko
+cache=$tmp/cache
+install_gecko() { in_launcher bash -c "export GECKO_SHARE='$gecko' XDG_CACHE_HOME='$cache'; source '$launcher'; install_gecko"; }
+rm -rf "$gecko" "$cache"; mkdir -p "$gecko"
+echo x86 >"$gecko/wine-gecko-2.47.4-x86.msi"; echo x64 >"$gecko/wine-gecko-2.47.4-x86_64.msi"
+install_gecko
+check "Gecko installers are copied to the wine cache" "$([[ -f $cache/wine/wine-gecko-2.47.4-x86.msi && -f $cache/wine/wine-gecko-2.47.4-x86_64.msi && ! -L $cache/wine/wine-gecko-2.47.4-x86.msi ]]; echo $?)"
+echo downloaded >"$cache/wine/wine-gecko-2.47.4-x86.msi"
+install_gecko
+check "Gecko installers already in the cache are kept" "$(grep -q downloaded "$cache/wine/wine-gecko-2.47.4-x86.msi"; echo $?)"
+rm -rf "$gecko" "$cache"
+install_gecko; rc=$?
+check "missing Gecko installers are not an error" "$((rc == 0 ? 0 : 1))"
 
 # Whole launcher
 run_main() {
   (
-    export HOME=$home PROC=$proc ACT_SHARE=$share
+    export HOME=$home PROC=$proc ACT_SHARE=$share GECKO_SHARE=$tmp/gecko2 XDG_CACHE_HOME=$tmp/cache2
     unset ACT_PREFIX ACT_WINE
     "$launcher" "$@"
   ) >"$tmp/out" 2>&1
 }
 reset
+rm -rf "$tmp/gecko2" "$tmp/cache2"; mkdir -p "$tmp/gecko2"; echo g >"$tmp/gecko2/wine-gecko-2.47.4-x86_64.msi"
 run_main; rc=$?
+check "launcher installs Gecko" "$([[ -f $tmp/cache2/wine/wine-gecko-2.47.4-x86_64.msi ]]; echo $?)"
 check "launcher runs ACT through wine" "$((rc == 0 ? 0 : 1))"
 check "launcher uses the detected prefix and sync" "$(grep -q "prefix=$prefix fsync=1 esync=" "$RECORD"; echo $?)"
 check "launcher joins the detected wineserver" "$(grep -q "server=$wine_a/bin/wineserver" "$RECORD"; echo $?)"

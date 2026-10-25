@@ -15,6 +15,10 @@ source=("FFXIV_ACT_Plugin-${pkgver}.zip::https://github.com/ravahn/FFXIV_ACT_Plu
 sha256sums=('089306e497dd4b8fb79290472f006b889fd21fc3d3816ce41ef9a0300feb2d11')
 
 package() {
-  local dir=$pkgdir/usr/share/advanced-combat-tracker/plugins/FFXIV_ACT_Plugin
-  install -Dm644 FFXIV_ACT_Plugin.dll deucalion-*.distrib.dll -t "$dir"
+  local dir=$pkgdir/usr/share/advanced-combat-tracker/plugins/FFXIV_ACT_Plugin file
+  install -Dm644 FFXIV_ACT_Plugin.dll -t "$dir"
+  # ACT's own plugin installer drops ".distrib" from this name.
+  for file in deucalion-*.distrib.dll; do
+    install -Dm644 "$file" "$dir/${file/.distrib/}"
+  done
 }
