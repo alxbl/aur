@@ -1,0 +1,4 @@
+post_install() {
+  echo "Run 'advanced-combat-tracker --setup' once to add .NET Framework 4.8 to the XIVLauncher wine prefix."
+  echo "Then start ACT with 'advanced-combat-tracker'."
+}

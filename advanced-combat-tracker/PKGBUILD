@@ -1,0 +1,32 @@
+# Maintainer: alxbl
+
+pkgname=advanced-combat-tracker
+pkgver=3.8.5.288
+pkgrel=1
+pkgdesc='Advanced Combat Tracker v3 for FFXIV under wine'
+arch=('any')
+url='https://advancedcombattracker.com'
+# Upstream ships no license text.
+license=('LicenseRef-custom')
+depends=('bash' 'winetricks')
+options=('!strip')
+install=advanced-combat-tracker.install
+source=("ACTv3-${pkgver}.zip::https://github.com/EQAditu/AdvancedCombatTracker/releases/download/${pkgver}/ACTv3.zip"
+        'advanced-combat-tracker'
+        'advanced-combat-tracker.desktop')
+# The first checksum is bumped by update/advanced-combat-tracker.sh; the local
+# files are checked by test.sh.
+sha256sums=('1a0ca91375d79daf3d2cbbb2920c90dbc40f3be2421cdc6765d93e27bf25e4b0'
+            'fad418a3c73755331d7f074119cd5eb522b4eb17d829e03193382180019d9de6'
+            '694cc5fba290ebb1f3c3e9b65dee40e2eb64f26fdb33701ebb983bfc8fe6fef4')
+
+package() {
+  local file
+  for file in *.exe *.config; do
+    install -Dm644 "$file" "$pkgdir/usr/share/advanced-combat-tracker/app/$file"
+  done
+  install -dm755 "$pkgdir/usr/share/advanced-combat-tracker/plugins"
+
+  install -Dm755 advanced-combat-tracker "$pkgdir/usr/bin/advanced-combat-tracker"
+  install -Dm644 advanced-combat-tracker.desktop "$pkgdir/usr/share/applications/advanced-combat-tracker.desktop"
+}

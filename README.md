@@ -45,6 +45,16 @@ update/lib.sh        # helpers shared by the updaters
 update/test.sh       # offline tests for the above
 ```
 
+## Packages
+
+| Package | Description |
+| --- | --- |
+| `istioctl-bin` | Istio command-line tool |
+| `advanced-combat-tracker` | Advanced Combat Tracker v3 for FFXIV under wine. Run `advanced-combat-tracker --setup` once, then `advanced-combat-tracker`. It finds the XIVLauncher.Core prefix (`~/.xlcore/wineprefix`) and wine build by itself; `ACT_PREFIX` and `ACT_WINE` override. |
+| `ffxiv-act-parser` | FFXIV parsing plugin for ACT, with the Deucalion network capture library |
+
+Packages that ship a script keep its tests next to it in `<pkgname>/test.sh`.
+
 ## Keeping packages current
 
 ```sh
@@ -64,7 +74,7 @@ Every package needs a matching `update/<pkgname>.sh`, and `check-all.sh` fails u
 - `latest_version`: print the newest upstream version in `pkgver` form.
 - `checksums VERSION`: print `<checksum-array> <sha256>` for each array to rewrite, or return non-zero if a hash is unavailable.
 
-Only single-element checksum arrays are rewritten. A change that needs more, such as new dependencies, belongs in a manual update; the updater should then only flag it.
+Only the first element of a checksum array is rewritten, so the upstream download must come first. Anything else, such as local files or new dependencies, belongs in a manual update; the updater should then only flag it.
 
 Run `update/test.sh` after changing `lib.sh` or `check-all.sh`.
 

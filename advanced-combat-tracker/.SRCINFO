@@ -1,0 +1,19 @@
+pkgbase = advanced-combat-tracker
+	pkgdesc = Advanced Combat Tracker v3 for FFXIV under wine
+	pkgver = 3.8.5.288
+	pkgrel = 1
+	url = https://advancedcombattracker.com
+	install = advanced-combat-tracker.install
+	arch = any
+	license = LicenseRef-custom
+	depends = bash
+	depends = winetricks
+	options = !strip
+	source = ACTv3-3.8.5.288.zip::https://github.com/EQAditu/AdvancedCombatTracker/releases/download/3.8.5.288/ACTv3.zip
+	source = advanced-combat-tracker
+	source = advanced-combat-tracker.desktop
+	sha256sums = 1a0ca91375d79daf3d2cbbb2920c90dbc40f3be2421cdc6765d93e27bf25e4b0
+	sha256sums = fad418a3c73755331d7f074119cd5eb522b4eb17d829e03193382180019d9de6
+	sha256sums = 694cc5fba290ebb1f3c3e9b65dee40e2eb64f26fdb33701ebb983bfc8fe6fef4
+
+pkgname = advanced-combat-tracker

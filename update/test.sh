@@ -92,6 +92,24 @@ run_stub 1.1.0 "sha256sums_aarch64 $new"; rc=$?
 check "unknown checksum array is an error" "$(rc_is 1; echo $?)"
 check "unknown checksum array leaves PKGBUILD alone" "$(unchanged; echo $?)"
 
+# Files next to the PKGBUILD (install scripts) are available to makepkg.
+reset_fixture
+echo 'post_install() { :; }' >"$tmp/root/demo-bin/demo-bin.install"
+echo "install=demo-bin.install" >>"$tmp/root/demo-bin/PKGBUILD"
+run_stub 1.1.0 "sha256sums_x86_64 $new"; rc=$?
+check "package with an install file is bumped (exit 10)" "$(rc_is 10; echo $?)"
+check "install file is left in place" "$([[ -f $tmp/root/demo-bin/demo-bin.install ]]; echo $?)"
+
+# Multi-element checksum arrays: only the first element is rewritten.
+reset_fixture
+other=$(printf 'c%.0s' {1..64})
+sed -i "s|^source_x86_64=.*|source_x86_64=(\"demo-\${pkgver}::https://example.com/demo-\${pkgver}\" 'launcher')|; /^sha256sums_x86_64=/d" "$tmp/root/demo-bin/PKGBUILD"
+printf "sha256sums_x86_64=('%s'\n                   '%s')\n" "$old" "$other" >>"$tmp/root/demo-bin/PKGBUILD"
+run_stub 1.1.0 "sha256sums_x86_64 $new"; rc=$?
+check "multi-element array bump succeeds (exit 10)" "$(rc_is 10; echo $?)"
+check "multi-element array: first element rewritten" "$(pkgbuild_has "^sha256sums_x86_64=('$new'\$"; echo $?)"
+check "multi-element array: later elements untouched" "$(pkgbuild_has "^ *'$other')\$"; echo $?)"
+
 # check-all.sh
 setup_tree() { # RC-OF-DEMO-UPDATER
   rm -rf "$tmp/tree" && mkdir -p "$tmp/tree/update" "$tmp/tree/demo-bin" "$tmp/tree/other-bin"

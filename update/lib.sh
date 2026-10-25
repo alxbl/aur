@@ -12,8 +12,8 @@
 #   11  out of date but not bumped (check-only mode, or checksums unavailable)
 #   *   error
 #
-# Only single-element checksum arrays, e.g. sha256sums_x86_64=('...'), are
-# rewritten.
+# Only the first element of a checksum array is rewritten, which must start on
+# the assignment line, e.g. sha256sums=('...' or sha256sums_x86_64=('...').
 
 set -euo pipefail
 
@@ -58,10 +58,11 @@ set_pkgbuild_var() {
   sed -i "s|^$2=.*|$2=$3|" "$1"
 }
 
-# set_checksum FILE ARRAY SHA256: fails if ARRAY is not a single-element array.
+# set_checksum FILE ARRAY SHA256: sets the first element of ARRAY; fails if
+# ARRAY does not start with a quoted hex checksum on its assignment line.
 set_checksum() {
-  grep -q "^$2=('[0-9a-f]*')\$" "$1" || return 1
-  sed -i "s/^$2=('[0-9a-f]*')\$/$2=('$3')/" "$1"
+  grep -q "^$2=('[0-9a-f]*'" "$1" || return 1
+  sed -i "s/^$2=('[0-9a-f]*'/$2=('$3'/" "$1"
 }
 
 run_update() {
@@ -93,7 +94,7 @@ run_update() {
   local work array sum
   work=$(mktemp -d)
   trap 'rm -rf "$work"' RETURN
-  cp "$dir/PKGBUILD" "$work/PKGBUILD"
+  cp -a "$dir/." "$work/"
   set_pkgbuild_var "$work/PKGBUILD" pkgver "$latest"
   set_pkgbuild_var "$work/PKGBUILD" pkgrel 1
   while read -r array sum; do
