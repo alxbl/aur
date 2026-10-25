@@ -2,7 +2,7 @@
 
 pkgname=ffxiv-act-parser
 pkgver=3.0.3.4
-pkgrel=1
+pkgrel=2
 pkgdesc='FFXIV parsing plugin for Advanced Combat Tracker'
 arch=('any')
 url='https://github.com/ravahn/FFXIV_ACT_Plugin'
