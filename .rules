@@ -1,6 +1,6 @@
 # alxbl/aur
 
-Source-only PKGBUILD repository for binary tools without official or AUR packages. Paru consumes it as a custom `[alxbl]` repository (`Url = https://github.com/alxbl/aur`). Nothing is pre-built.
+Source-only PKGBUILD repository for tools without official or AUR packages: mostly repackaged upstream binaries, some built from source. Paru consumes it as a custom `[alxbl]` repository (`Url = https://github.com/alxbl/aur`). Nothing is pre-built.
 
 ## Procedures
 - New package: start from `templates/PKGBUILD-bin` and add `update/<pkgname>.sh` in the same change. `update/check-all.sh` fails for a package without an updater.
