@@ -1,6 +1,6 @@
 # alxbl/aur
 
-Personal PKGBUILD repository for binary tools that have no official or AUR package. Each directory is one package; nothing is pre-built.
+Personal PKGBUILD repository for tools that have no official or AUR package. Most are repackaged upstream binaries; some are built from source. Each directory is one package; nothing is pre-built.
 
 > **NOTE**: This has only been tested with `paru` and may or may not work with
   other AUR package managers.
@@ -50,6 +50,7 @@ update/test.sh       # offline tests for the above
 | Package | Description |
 | --- | --- |
 | `istioctl-bin` | Istio command-line tool |
+| `fgj` | `gh`-compatible command-line client for Forgejo, built from source with cargo |
 | `advanced-combat-tracker` | Advanced Combat Tracker v3 for FFXIV under wine. Run `advanced-combat-tracker --setup` once, then `advanced-combat-tracker`. It finds the XIVLauncher.Core prefix (`~/.xlcore/wineprefix`) and wine build by itself; `ACT_PREFIX` and `ACT_WINE` override. |
 | `ffxiv-act-parser` | FFXIV parsing plugin for ACT, with the Deucalion network capture library |
 | `act-overlay-plugin` | OverlayPlugin for ACT. The plugin downloads its own CEF browser engine on first use. |
@@ -86,6 +87,7 @@ Run `update/test.sh` after changing `lib.sh` or `check-all.sh`.
 ## Conventions
 
 - Name packages that repackage upstream release binaries with a `-bin` suffix.
+- A package built from source takes the upstream name (no suffix); see `fgj` for a cargo build from a tag archive.
 - Pin `sha256sums`. Never use `SKIP`.
 - Regenerate `.SRCINFO` after every PKGBUILD change: `makepkg --printsrcinfo > .SRCINFO`.
 - Start a new package from `templates/PKGBUILD-bin`, and add its updater.

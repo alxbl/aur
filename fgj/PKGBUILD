@@ -1,0 +1,43 @@
+# Maintainer: alxbl
+
+pkgname=fgj
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='gh-compatible command-line client for Forgejo'
+arch=('x86_64' 'aarch64')
+url='https://code.segfault.me/alxbl/fgj'
+license=('AGPL-3.0-or-later')
+depends=('gcc-libs' 'git')
+makedepends=('cargo')
+optdepends=('gnome-keyring: store tokens in the Secret Service keyring'
+            'kwallet: store tokens in the Secret Service keyring')
+options=('!lto' '!debug')
+source=("fgj-${pkgver}.tar.gz::https://code.segfault.me/alxbl/fgj/archive/v${pkgver}.tar.gz")
+sha256sums=('ac3a878b49812c3419d0e1dd72f7601083988ab71293a0c1bcb7ef2a6056aa94')
+
+prepare() {
+  cd fgj
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd fgj
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR=target
+  cargo build --frozen --release
+}
+
+check() {
+  cd fgj
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR=target
+  cargo test --frozen
+}
+
+package() {
+  cd fgj
+  install -Dm755 target/release/fgj "$pkgdir/usr/bin/fgj"
+  target/release/fgj completion --shell bash | install -Dm644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/fgj"
+  target/release/fgj completion --shell zsh | install -Dm644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_fgj"
+  target/release/fgj completion --shell fish | install -Dm644 /dev/stdin "$pkgdir/usr/share/fish/vendor_completions.d/fgj.fish"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
