@@ -1,0 +1,26 @@
+# Maintainer: alxbl
+
+pkgname=fgj-bin
+pkgver=0.2.1
+pkgrel=1
+pkgdesc='gh-compatible command-line client for Forgejo (prebuilt release)'
+arch=('x86_64')
+url='https://code.segfault.me/alxbl/fgj'
+license=('AGPL-3.0-or-later')
+depends=('gcc-libs' 'git')
+optdepends=('gnome-keyring: store tokens in the Secret Service keyring'
+            'kwallet: store tokens in the Secret Service keyring')
+provides=("fgj=${pkgver}")
+conflicts=('fgj')
+options=('!strip' '!debug')
+source_x86_64=("fgj-${pkgver}-x86_64-linux.tar.gz::https://code.segfault.me/alxbl/fgj/releases/download/v${pkgver}/fgj-${pkgver}-x86_64-linux.tar.gz")
+sha256sums_x86_64=('d08368601f07efca03e376d327b6849cb653dc238fd1ba533797afc12089d90b')
+
+package() {
+  cd "fgj-${pkgver}-x86_64-linux"
+  install -Dm755 fgj "$pkgdir/usr/bin/fgj"
+  ./fgj completion --shell bash | install -Dm644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/fgj"
+  ./fgj completion --shell zsh | install -Dm644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_fgj"
+  ./fgj completion --shell fish | install -Dm644 /dev/stdin "$pkgdir/usr/share/fish/vendor_completions.d/fgj.fish"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
