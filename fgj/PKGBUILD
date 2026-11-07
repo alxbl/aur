@@ -1,7 +1,7 @@
 # Maintainer: alxbl
 
 pkgname=fgj
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc='gh-compatible command-line client for Forgejo'
 arch=('x86_64' 'aarch64')
@@ -13,7 +13,7 @@ optdepends=('gnome-keyring: store tokens in the Secret Service keyring'
             'kwallet: store tokens in the Secret Service keyring')
 options=('!lto' '!debug')
 source=("fgj-${pkgver}.tar.gz::https://code.segfault.me/alxbl/fgj/archive/v${pkgver}.tar.gz")
-sha256sums=('ac3a878b49812c3419d0e1dd72f7601083988ab71293a0c1bcb7ef2a6056aa94')
+sha256sums=('7d61c95489d90456f42d59b37b70c570097608e9a2822b1784d83e8222008375')
 
 prepare() {
   cd fgj
