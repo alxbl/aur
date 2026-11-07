@@ -1,6 +1,6 @@
-pkgbase = fgj
+pkgbase = fgj-git
 	pkgdesc = gh-compatible command-line client for Forgejo
-	pkgver = 0.2.0
+	pkgver = 0.2.0.r169.g137e58a
 	pkgrel = 1
 	url = https://code.segfault.me/alxbl/fgj
 	arch = x86_64
@@ -11,9 +11,11 @@ pkgbase = fgj
 	depends = git
 	optdepends = gnome-keyring: store tokens in the Secret Service keyring
 	optdepends = kwallet: store tokens in the Secret Service keyring
+	provides = fgj
+	conflicts = fgj
 	options = !lto
 	options = !debug
-	source = fgj-0.2.0.tar.gz::https://code.segfault.me/alxbl/fgj/archive/v0.2.0.tar.gz
-	sha256sums = 7d61c95489d90456f42d59b37b70c570097608e9a2822b1784d83e8222008375
+	source = fgj::git+https://code.segfault.me/alxbl/fgj.git
+	sha256sums = SKIP
 
-pkgname = fgj
+pkgname = fgj-git

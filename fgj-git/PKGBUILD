@@ -1,7 +1,7 @@
 # Maintainer: alxbl
 
-pkgname=fgj
-pkgver=0.2.0
+pkgname=fgj-git
+pkgver=0.2.0.r169.g137e58a
 pkgrel=1
 pkgdesc='gh-compatible command-line client for Forgejo'
 arch=('x86_64' 'aarch64')
@@ -9,11 +9,20 @@ url='https://code.segfault.me/alxbl/fgj'
 license=('AGPL-3.0-or-later')
 depends=('gcc-libs' 'git')
 makedepends=('cargo')
+provides=('fgj')
+conflicts=('fgj')
 optdepends=('gnome-keyring: store tokens in the Secret Service keyring'
             'kwallet: store tokens in the Secret Service keyring')
 options=('!lto' '!debug')
-source=("fgj-${pkgver}.tar.gz::https://code.segfault.me/alxbl/fgj/archive/v${pkgver}.tar.gz")
-sha256sums=('7d61c95489d90456f42d59b37b70c570097608e9a2822b1784d83e8222008375')
+# A git source cannot be pinned by checksum; pkgver() names the commit that was built.
+source=("fgj::git+https://code.segfault.me/alxbl/fgj.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd fgj
+  printf '%s.r%s.g%s' "$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)" \
+    "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
 
 prepare() {
   cd fgj
