@@ -17,7 +17,7 @@ Source-only PKGBUILD repository for tools without official or AUR packages: most
 - Never edit the user's real `paru.conf` without consent.
 - Never run `paru -Sy` against the real pacman databases for testing; it risks a partial upgrade. Use `paru --dbpath <copy> -Sy --pkgbuilds`.
 - Paru finds packages by scanning for files named `PKGBUILD`. Never give a template or fixture that name.
-- Pin `sha256sums`; never `SKIP`. The template's all-zero checksum is a deliberate placeholder.
+- Pin `sha256sums`; never `SKIP`, except for a git source (`-git` packages), which cannot be pinned. The template's all-zero checksum is a deliberate placeholder.
 - Updaters only rewrite the first element of a checksum array, the upstream download. An update that needs more (new dependencies, changed sources) must be flagged as out of date, not guessed.
 - ACT must run on the game's exact wine build and sync mode (fsync/esync), or a second wineserver starts and ACT cannot see the game. The `advanced-combat-tracker` launcher follows the running wineserver for this; keep it that way.
 - Never symlink files into a wine prefix. Wine exposes symlinks to Windows programs as reparse points, which breaks ACT's own checks (it reports its `.exe.config` as corrupt). Copy instead.
