@@ -50,6 +50,7 @@ update/test.sh       # offline tests for the above
 | Package | Description |
 | --- | --- |
 | `istioctl-bin` | Istio command-line tool |
+| `fgj-bin` | `gh`-compatible command-line client for Forgejo, the prebuilt x86_64 release from `code.segfault.me/alxbl/fgj` (checksum published with the release) |
 | `fgj-git` | `gh`-compatible command-line client for Forgejo, built from the git HEAD with cargo; provides and conflicts with `fgj` |
 | `advanced-combat-tracker` | Advanced Combat Tracker v3 for FFXIV under wine. Run `advanced-combat-tracker --setup` once, then `advanced-combat-tracker`. It finds the XIVLauncher.Core prefix (`~/.xlcore/wineprefix`) and wine build by itself; `ACT_PREFIX` and `ACT_WINE` override. |
 | `ffxiv-act-parser` | FFXIV parsing plugin for ACT, with the Deucalion network capture library |
