@@ -1,6 +1,6 @@
 pkgbase = fgj-bin
 	pkgdesc = gh-compatible command-line client for Forgejo (prebuilt release)
-	pkgver = 0.4.0
+	pkgver = 0.4.1
 	pkgrel = 1
 	url = https://code.segfault.me/alxbl/fgj
 	arch = x86_64
@@ -9,11 +9,11 @@ pkgbase = fgj-bin
 	depends = git
 	optdepends = gnome-keyring: store tokens in the Secret Service keyring
 	optdepends = kwallet: store tokens in the Secret Service keyring
-	provides = fgj=0.4.0
+	provides = fgj=0.4.1
 	conflicts = fgj
 	options = !strip
 	options = !debug
-	source_x86_64 = fgj-0.4.0-x86_64-linux.tar.gz::https://code.segfault.me/alxbl/fgj/releases/download/v0.4.0/fgj-0.4.0-x86_64-linux.tar.gz
-	sha256sums_x86_64 = 0c974f673510477b8ed4a97c431383811650a4cacfab9e543450e06bec4fdd0b
+	source_x86_64 = fgj-0.4.1-x86_64-linux.tar.gz::https://code.segfault.me/alxbl/fgj/releases/download/v0.4.1/fgj-0.4.1-x86_64-linux.tar.gz
+	sha256sums_x86_64 = 972758e1982f7ce36e64bf98f077d89d87f9ceac87cfa2ba5f683788e0886318
 
 pkgname = fgj-bin
