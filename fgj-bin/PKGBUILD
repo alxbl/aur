@@ -1,7 +1,7 @@
 # Maintainer: alxbl
 
 pkgname=fgj-bin
-pkgver=0.3.0
+pkgver=0.4.0
 pkgrel=1
 pkgdesc='gh-compatible command-line client for Forgejo (prebuilt release)'
 arch=('x86_64')
@@ -14,7 +14,7 @@ provides=("fgj=${pkgver}")
 conflicts=('fgj')
 options=('!strip' '!debug')
 source_x86_64=("fgj-${pkgver}-x86_64-linux.tar.gz::https://code.segfault.me/alxbl/fgj/releases/download/v${pkgver}/fgj-${pkgver}-x86_64-linux.tar.gz")
-sha256sums_x86_64=('468354c96f7b88d41cd8950e4ac5bfa7d57b65e475873b53870aaf3571216f96')
+sha256sums_x86_64=('0c974f673510477b8ed4a97c431383811650a4cacfab9e543450e06bec4fdd0b')
 
 package() {
   cd "fgj-${pkgver}-x86_64-linux"
